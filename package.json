@@ -7,10 +7,7 @@
     "build": "remotion render src/index.tsx YoutubeShorts out/video.mp4 --timeout 1000000",
     "upgrade": "remotion upgrade",
     "server": "ts-node server.tsx",
-    "youtube": "ts-node youtube.tsx",
     "test": "eslint src --ext ts,tsx,js,jsx && tsc",
-    "fetch": "zx scripts/fetchProductHunt.mjs",
-    "post-tweet": "zx scripts/postTweet.mjs",
     "lint": "eslint src --ext ts,tsx,js,jsx",
     "lint:fix": "eslint src --ext ts,tsx,js,jsx --fix"
   },

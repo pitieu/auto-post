@@ -1,13 +1,10 @@
 import { Sequence, useVideoConfig } from "remotion";
-
 import { BaseBackground } from "./components/ITJokes/BaseBackground";
-
-import useFetch from "./hooks/useFetch";
+import data from "../data/itJokes.json";
 import { ImageList } from "./components/ITJokes/ImageList";
 
 export const ITJoke = () => {
   const videoConfig = useVideoConfig();
-  const { data } = useFetch();
 
   return (
     <div style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
