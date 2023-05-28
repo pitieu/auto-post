@@ -1,35 +1,20 @@
-import fs from "fs";
-
 import express from "express";
 import dotenv from "dotenv";
-import stream from "stream";
-import { promisify } from "util";
 import sharp from "sharp";
 
 import { initMongoose } from "./lib/mongodb";
-import { getImage, writeToFile } from "./lib/file";
-import ImageModel from "./models/Image.model";
+import { getImage } from "./lib/file";
 import { downloadImages, downloadImage, imageExists } from "./lib/image";
 import { captionImage, upscaleImage } from "./lib/replicate";
 import { captionImage as transformerCaption } from "./lib/transformers";
 import { createThumbnailFromUrl } from "./lib/screenshot";
 import { ytCallback, ytLogin } from "./lib/youtube";
 import { fetchMemes, getRandomLinks } from "./lib/itmeme";
+import { fetchStreetView } from "./lib/google";
 dotenv.config();
-const pipeline = promisify(stream.pipeline);
 
 const app = express();
 const PORT = 3000;
-
-type Image = {
-  id: number;
-  created: string;
-  modified: string;
-  image: string;
-  tags: string[];
-  upvotes: number;
-  downvotes: number;
-};
 
 app.get("/", function (req, res) {
   res.send("This is a basic Example for Express.js");
@@ -60,24 +45,12 @@ app.get("/thumbnail/create", async (req, res) => {
  */
 app.get("/streetview", async (req, res) => {
   if (!req.query.longitude) throw new Error("longitude required");
-  if (!req.query.latitiude) throw new Error("latitiude required");
+  if (!req.query.latitude) throw new Error("latitude required");
 
-  // @ts-ignore
-  // req.query.longitude = 115.2537;
-  // @ts-ignore
-  // req.query.latitude = -8.5065;
-  const key = process.env.GOOGLE_STREET_API;
-  const url = `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${req.query.latitude},${req.query.longitude}&fov=80&heading=70&pitch=0&key=${key}`;
-
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
-    },
-  });
-  // @ts-ignore
-  await pipeline(response.body, fs.createWriteStream("streetview.jpg"));
-
+  const url = await fetchStreetView(
+    req.query.longitude as string,
+    req.query.latitude as string
+  );
   res.json({ ...req.query, url });
 });
 
@@ -159,8 +132,6 @@ app.get("/fetch/itmeme", async (req, res) => {
 
 app.get("/login", ytLogin);
 app.get("/oauth2callback", ytCallback);
-
-
 
 initMongoose().then(() => {
   app.listen(PORT, () => {
