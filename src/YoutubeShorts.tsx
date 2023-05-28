@@ -7,7 +7,7 @@ export const YoutubeShorts = () => {
       <Composition
         id="YoutubeShorts"
         component={ITJoke}
-        durationInFrames={30 * 8 * 12}
+        durationInFrames={30 * 8 * 8}
         fps={30}
         width={1080}
         height={1080}

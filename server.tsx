@@ -11,8 +11,10 @@ import { getImage, writeToFile } from "./lib/file";
 import ImageModel from "./models/Image.model";
 import { downloadImages, downloadImage, imageExists } from "./lib/image";
 import { captionImage, upscaleImage } from "./lib/replicate";
+import { captionImage as transformerCaption } from "./lib/transformers";
 import { createThumbnailFromUrl } from "./lib/screenshot";
 import { ytCallback, ytLogin } from "./lib/youtube";
+import { fetchMemes, getRandomLinks } from "./lib/itmeme";
 dotenv.config();
 const pipeline = promisify(stream.pipeline);
 
@@ -80,7 +82,8 @@ app.get("/streetview", async (req, res) => {
 });
 
 /**
- * Input image get a description
+ * Input image get a detailed description
+ * Every caption here costs money
  */
 app.get("/image/caption", async (req: any, res: any) => {
   try {
@@ -97,11 +100,30 @@ app.get("/image/caption", async (req: any, res: any) => {
   }
 });
 
+/**
+ * Input image get simple description
+ * FREE it is process on server
+ */
+app.get("/image/caption_free", async (req: any, res: any) => {
+  try {
+    if (!req.query.imageName) throw new Error("No image param");
+    if (!imageExists(req.query.imageName))
+      throw new Error("Image does not exist in public/assets/images");
+    const output = await transformerCaption(req.query.imageName);
+
+    res.json(output);
+  } catch (e) {
+    console.log(e);
+    res.json(e);
+  }
+});
+
 app.get("/image/upscale", async (req: any, res: any) => {
   try {
     if (!req.query.imageName) throw new Error("No image param");
     if (!imageExists(req.query.imageName))
       throw new Error("Image does not exist in public/assets/images");
+
     const dataURI = getImage(req.query.imageName);
     const output = await upscaleImage(dataURI);
 
@@ -117,57 +139,19 @@ app.get("/image/upscale", async (req: any, res: any) => {
 });
 
 app.get("/itmeme/image", async (req, res) => {
-  const randomItems = await ImageModel.aggregate([{ $sample: { size: 12 } }]);
-  console.log("Random items:", randomItems);
-  writeToFile(
-    "itJokes",
-    randomItems.map((u) => u.image.replace("public/", "/"))
-  );
-  res.json(randomItems);
+  try {
+    const randomItems = await getRandomLinks();
+    res.json(randomItems);
+  } catch (e) {
+    res.json();
+    console.log(e);
+  }
 });
 
 app.get("/fetch/itmeme", async (req, res) => {
   try {
-    const options = {
-      url: "https://programming-memes-images.p.rapidapi.com/v1/memes",
-      method: "GET",
-      headers: {
-        "X-RapidAPI-Key": "fa17b9b471msha4a2c5a95ba7ca3p1df2e8jsn77e55d34726e",
-        "X-RapidAPI-Host": "programming-memes-images.p.rapidapi.com",
-      },
-    };
-    const result = await fetch(options.url, {
-      method: options.method,
-      headers: options.headers,
-    });
-
-    if (result.ok) {
-      const json: Image[] = await result.json();
-      //   console.log(json);
-      const imageList = await Promise.all(
-        json?.map(async (u: Image, index: number) => {
-          const delayDuration = 300;
-          const delayTime = index * delayDuration;
-          // Delay execution before each download
-          await delay(delayTime);
-          const result = await downloadImages([u.image]);
-          return {
-            image: result[0].path,
-            fid: u.id,
-            url: u.image,
-            name: result[0].name,
-          };
-        })
-      );
-      console.log(imageList);
-      // await downloadImages(imageList, "public/assets/images/");
-      ImageModel.insertMany(imageList, { ordered: false });
-
-      res.send(imageList);
-    } else {
-      res.send(400).json();
-      // throw new Error("Response not ok");
-    }
+    const imageList = await fetchMemes();
+    res.send(imageList);
   } catch (e) {
     console.log(e);
   }
@@ -176,9 +160,7 @@ app.get("/fetch/itmeme", async (req, res) => {
 app.get("/login", ytLogin);
 app.get("/oauth2callback", ytCallback);
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+
 
 initMongoose().then(() => {
   app.listen(PORT, () => {

@@ -13,7 +13,7 @@ export const ITJoke = () => {
         <BaseBackground />
       </Sequence>
 
-      <Sequence from={0} durationInFrames={30 * 8 * 12} name="ProductList">
+      <Sequence from={0} durationInFrames={30 * 8 * 8} name="ProductList">
         <ImageList images={data} />
       </Sequence>
     </div>

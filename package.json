@@ -7,7 +7,7 @@
     "build": "remotion render src/index.tsx YoutubeShorts out/video.mp4 --timeout 1000000",
     "upgrade": "remotion upgrade",
     "blip": "ts-node blip.tsx",
-    "server": "ts-node server.tsx",
+    "server": "concurrently \"ts-node server.tsx\"  \"node ./transformers/index.js\"",
     "test": "eslint src --ext ts,tsx,js,jsx && tsc",
     "lint": "eslint src --ext ts,tsx,js,jsx",
     "lint:fix": "eslint src --ext ts,tsx,js,jsx --fix"
@@ -62,6 +62,7 @@
     "@types/web": "^0.0.46",
     "@typescript-eslint/eslint-plugin": "^5.14.0",
     "@typescript-eslint/parser": "^5.14.0",
+    "concurrently": "^8.0.1",
     "eslint-config-eason": "^0.0.6",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-html": "^6.2.0",
