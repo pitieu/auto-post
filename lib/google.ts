@@ -8,11 +8,21 @@ dotenv.config();
 
 const pipeline = promisify(stream.pipeline);
 
-export const fetchStreetView = async (longitude: string, latitude: string) => {
+export const fetchStreetView = async ({
+  width = "600",
+  height = "300",
+  longitude,
+  latitude,
+}: {
+  width?: string;
+  height?: string;
+  longitude: string;
+  latitude: string;
+}) => {
   if (!longitude) throw new Error("longitude required");
   if (!latitude) throw new Error("latitude required");
 
-  const url = `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${req.query.latitude},${req.query.longitude}&fov=80&heading=70&pitch=0&key=${process.env.GOOGLE_STREET_API}`;
+  const url = `https://maps.googleapis.com/maps/api/streetview?size=${height}x${width}&location=${latitude},${longitude}&fov=80&heading=70&pitch=0&key=${process.env.GOOGLE_STREET_API}`;
 
   const response = await fetch(url, {
     headers: {
@@ -22,6 +32,7 @@ export const fetchStreetView = async (longitude: string, latitude: string) => {
   });
 
   if (!response.ok) {
+    console.log(response);
     throw new Error(`HTTP request failed with status ${response.status}`);
   }
 

@@ -47,10 +47,10 @@ app.get("/streetview", async (req, res) => {
   if (!req.query.longitude) throw new Error("longitude required");
   if (!req.query.latitude) throw new Error("latitude required");
 
-  const url = await fetchStreetView(
-    req.query.longitude as string,
-    req.query.latitude as string
-  );
+  const url = await fetchStreetView({
+    longitude: req.query.longitude as string,
+    latitude: req.query.latitude as string,
+  });
   res.json({ ...req.query, url });
 });
 
