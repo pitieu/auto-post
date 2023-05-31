@@ -1,5 +1,5 @@
 import ImageModel from "../models/Image.model";
-import { getImage, writeToFile } from "./file";
+import { writeToFile } from "./file";
 import { delay } from "../utils";
 import { downloadImages } from "./image";
 

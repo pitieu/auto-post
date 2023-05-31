@@ -1,42 +1,33 @@
-# from transformers import pipeline
-# # transformer list https://huggingface.co/models?library=transformers&sort=downloads
+import json
+from flask import Flask, request
+from lib.predictor import ImagePredictor
+from lib.predictor2 import ImagePredictor2
+from lib.timer import Timer
 
-# image_to_text = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")
+app = Flask(__name__)
 
-# print(image_to_text("./assets/3.jpg"))
+@app.route("/classify")
+def classify():
+    predictor = ImagePredictor()
+    result = predictor.predict(['./assets/3.jpg'])
+    return result[0]
 
+@app.route("/tag")
+def hello():
+    image_name = request.args.get('imageName')
+    if not image_name:
+      return "Error: No image name provided."
+    
+    Timer.start()
+    predictor = ImagePredictor2()
+    image_path = f'../public/assets/images/{image_name}.jpg'
+    result = predictor.predict([image_path])
+    Timer.end()
+    response = {
+        "output": result[0],
+        "execution_time": Timer.execution_time
+    }
+    return json.dumps(response)
 
-from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
-import torch
-from PIL import Image
-
-model = VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
-feature_extractor = ViTImageProcessor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
-tokenizer = AutoTokenizer.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-
-max_length = 16
-num_beams = 4
-gen_kwargs = {"max_length": max_length, "num_beams": num_beams}
-def predict_step(image_paths):
-  images = []
-  for image_path in image_paths:
-    i_image = Image.open(image_path)
-    if i_image.mode != "RGB":
-      i_image = i_image.convert(mode="RGB")
-
-    images.append(i_image)
-
-  pixel_values = feature_extractor(images=images, return_tensors="pt").pixel_values
-  pixel_values = pixel_values.to(device)
-
-  output_ids = model.generate(pixel_values, **gen_kwargs)
-
-  preds = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-  preds = [pred.strip() for pred in preds]
-  return preds
-
-
-print(predict_step(['./assets/3.jpg']))
+if __name__ == "__main__":
+    app.run(port=8001)

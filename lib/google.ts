@@ -22,7 +22,7 @@ export const fetchStreetView = async ({
   if (!longitude) throw new Error("longitude required");
   if (!latitude) throw new Error("latitude required");
 
-  const url = `https://maps.googleapis.com/maps/api/streetview?size=${height}x${width}&location=${latitude},${longitude}&fov=80&heading=70&pitch=0&key=${process.env.GOOGLE_STREET_API}`;
+  const url = `https://maps.googleapis.com/maps/api/streetview?size=${width}x${height}&location=${latitude},${longitude}&fov=80&heading=70&pitch=0&key=${process.env.GOOGLE_STREET_API}`;
 
   const response = await fetch(url, {
     headers: {
@@ -36,7 +36,10 @@ export const fetchStreetView = async ({
     throw new Error(`HTTP request failed with status ${response.status}`);
   }
 
-  await pipeline(response.body, fs.createWriteStream("streetview.jpg"));
+  await pipeline(
+    response.body,
+    fs.createWriteStream("./public/assets/images/streetview.jpg")
+  );
 
   return url;
 };

@@ -8,7 +8,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
-const compositionId = "HelloWorld";
+const compositionId: string = "YoutubeShorts";
 
 export const generateVideo = async (req, res) => {
   const sendFile = (file: string) => {
@@ -19,7 +19,7 @@ export const generateVideo = async (req, res) => {
       });
   };
   try {
-    const bundled = await bundle(path.join(__dirname, "./src/index.tsx"));
+    const bundled = await bundle(path.join(__dirname, "../src/index.tsx"));
     const comps = await getCompositions(bundled, { inputProps: req.query });
     const video = comps.find((c) => c.id === compositionId);
     if (!video) {
@@ -42,7 +42,6 @@ export const generateVideo = async (req, res) => {
       parallelism: null,
       outputDir: tmpDir,
       inputProps: req.query,
-      compositionId,
       imageFormat: "jpeg",
     });
 
@@ -54,7 +53,6 @@ export const generateVideo = async (req, res) => {
       height: video.height,
       width: video.width,
       outputLocation: finalOutput,
-      imageFormat: "jpeg",
       assetsInfo,
     });
     sendFile(finalOutput);
